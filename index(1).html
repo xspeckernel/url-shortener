@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encurtador de URL</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0F1115;
+    color: #E8EAED;
+    font-family: system-ui, sans-serif;
+  }
+  .card {
+    background: #171A21;
+    border: 1px solid #2A2E37;
+    border-radius: 14px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+  }
+  h1 { font-size: 1.4rem; margin: 0 0 24px; }
+  form { display: flex; gap: 10px; }
+  input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #2A2E37;
+    background: #0F1115;
+    color: #E8EAED;
+    font-size: 1rem;
+  }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #6C5CE7;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #5A4BD1; }
+  .resultado {
+    margin-top: 24px;
+    padding: 16px;
+    background: #0F1115;
+    border: 1px solid #2A2E37;
+    border-radius: 8px;
+    display: none;
+    word-break: break-all;
+  }
+  .resultado a { color: #6C5CE7; }
+  .erro { color: #FF6B6B; margin-top: 16px; display: none; }
+  .stats { margin-top: 12px; font-size: 0.85rem; color: #9AA1AC; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Encurtador de URL</h1>
+    <form id="form">
+      <input type="url" id="url" placeholder="https://exemplo.com/link-gigante" required>
+      <button type="submit">Encurtar</button>
+    </form>
+    <div class="erro" id="erro"></div>
+    <div class="resultado" id="resultado">
+      <a id="link" href="#" target="_blank"></a>
+      <div class="stats" id="stats"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const urlInput = document.getElementById("url");
+    const resultado = document.getElementById("resultado");
+    const linkEl = document.getElementById("link");
+    const statsEl = document.getElementById("stats");
+    const erroEl = document.getElementById("erro");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      erroEl.style.display = "none";
+      resultado.style.display = "none";
+
+      try {
+        const res = await fetch("/api/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: urlInput.value }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          erroEl.textContent = data.error || "Erro ao encurtar a URL";
+          erroEl.style.display = "block";
+          return;
+        }
+
+        linkEl.href = data.shortUrl;
+        linkEl.textContent = data.shortUrl;
+        statsEl.textContent = "0 cliques até agora";
+        resultado.style.display = "block";
+      } catch {
+        erroEl.textContent = "Não foi possível conectar ao servidor";
+        erroEl.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>
